@@ -926,6 +926,54 @@ section h3 {
     .legend-item {
         font-size: 0.75rem;
     }
+
+    /* Bar Chart V2 Mobile Adjustments */
+    .bar-chart-v2 {
+        height: 220px;
+    }
+
+    .bars-container {
+        height: 190px;
+    }
+
+    .bar-group-v2 {
+        gap: 4px;
+    }
+
+    .bar-v2 {
+        width: 20px;
+    }
+
+    .bar-value-top {
+        font-size: 0.65rem;
+    }
+
+    .bar-label-v2 {
+        font-size: 0.7rem;
+        bottom: -22px;
+    }
+
+    .chart-legend-v2 {
+        gap: 12px;
+        flex-wrap: wrap;
+    }
+
+    .legend-item-v2 {
+        font-size: 0.75rem;
+    }
+
+    .legend-color-v2 {
+        width: 14px;
+        height: 14px;
+    }
+
+    .y-axis-labels {
+        font-size: 0.7rem;
+    }
+
+    .y-axis-title {
+        font-size: 0.7rem;
+    }
 }
 
 @media (max-width: 480px) {
@@ -950,5 +998,60 @@ section h3 {
 
     .achievement-number {
         font-size: 1.8rem;
+    }
+
+    /* Bar Chart V2 Small Screen Adjustments */
+    .bar-chart-v2 {
+        height: 200px;
+    }
+
+    .bars-container {
+        height: 170px;
+    }
+
+    .bar-group-v2 {
+        gap: 2px;
+    }
+
+    .bar-v2 {
+        width: 16px;
+    }
+
+    .bar-value-top {
+        font-size: 0.6rem;
+        margin-bottom: 2px;
+    }
+
+    .bar-label-v2 {
+        font-size: 0.6rem;
+        bottom: -20px;
+        white-space: normal;
+        max-width: 60px;
+        line-height: 1.2;
+    }
+
+    .chart-legend-v2 {
+        gap: 8px;
+    }
+
+    .legend-item-v2 {
+        font-size: 0.7rem;
+    }
+
+    .legend-color-v2 {
+        width: 12px;
+        height: 12px;
+    }
+
+    .y-axis-labels {
+        font-size: 0.65rem;
+    }
+
+    .y-axis-title {
+        font-size: 0.65rem;
+    }
+
+    .bar-chart-title-v2 {
+        font-size: 1rem;
     }
 }
