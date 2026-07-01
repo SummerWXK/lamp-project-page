@@ -1,0 +1,695 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>LaMP: Learning Vision-Language-Action Policy with 3D Scene Flow as Latent Motion Prior</title>
+    <link rel="stylesheet" href="css/style.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+</head>
+<body>
+    <!-- Header Section -->
+    <header class="header">
+        <div class="container">
+            <h1 class="title">LaMP: Learning Vision-Language-Action Policy with 3D Scene Flow as Latent Motion Prior</h1>
+
+            <!-- Authors -->
+            <div class="authors">
+                <span class="author">Xinkai Wang<sup>1,5</sup></span>,
+                <span class="author">Chenyi Wang<sup>3,5</sup></span>,
+                <span class="author">Yifu Xu<sup>2,5</sup></span>,
+                <span class="author">Mingzhe Ye<sup>2</sup></span>,
+                <span class="author">Fucheng Zhang<sup>4,5</sup></span>,
+                <br>
+                <span class="author">Jialin Tian<sup>2,5</sup></span>,
+                <span class="author">Xinyu Zhan<sup>2,5</sup></span>,
+                <span class="author">Lifeng Zhu<sup>1</sup></span>,
+                <span class="author">Cewu Lu<sup>2,5&dagger;</sup></span>,
+                <span class="author">Lixin Yang<sup>2,5&dagger;</sup></span>
+            </div>
+
+            <!-- Affiliations -->
+            <div class="affiliations">
+                <span class="affiliation"><sup>1</sup>Southeast University</span>
+                <span class="affiliation"><sup>2</sup>Shanghai Jiao Tong University</span>
+                <span class="affiliation"><sup>3</sup>Zhejiang University</span>
+                <br>
+                <span class="affiliation"><sup>4</sup>Beihang University</span>
+                <span class="affiliation"><sup>5</sup>Shanghai Innovation Institute</span>
+            </div>
+            <p class="author-note"><sup>&dagger;</sup>Co-advising</p>
+
+            <!-- Resource Links -->
+            <div class="links">
+                <a href="#" class="btn" target="_blank">
+                    <i class="fa-solid fa-file-pdf"></i> Paper
+                </a>
+                <a href="#" class="btn" target="_blank">
+                    <i class="fa-brands fa-github"></i> Code
+                </a>
+                <a href="#" class="btn" target="_blank">
+                    <i class="fa-brands fa-youtube"></i> Video
+                </a>
+            </div>
+        </div>
+    </header>
+
+    <!-- Teaser Figure -->
+    <section class="teaser">
+        <div class="container">
+            <img src="images/teaser.png" alt="Teaser Figure" class="teaser-img">
+            <p class="caption">
+                <b>LaMP achieves best performance by embedding 3D scene flow as a latent motion prior.</b> Unlike 2D-centric VLAs that struggle with spatial reasoning, LaMP's dual-expert architecture achieves <b>98.3%</b> on LIBERO, <b>+9.7%</b> improvement on OOD perturbations, and <b>79.2%</b> on SimplerEnv-WidowX—bridging the sim-to-real gap through explicit geometric foresight.
+            </p>
+        </div>
+    </section>
+
+    <!-- Abstract Section -->
+    <section class="abstract">
+        <div class="container">
+            <h2>Abstract</h2>
+            <p>
+                LaMP is a dual-expert vision-language-action framework that embeds dense 3D scene flow as a latent motion prior for robotic manipulation. Existing VLA models directly generate actions from 2D semantic features, implicitly requiring the policy to learn complex 3D physical interactions—a strategy that struggles under unfamiliar spatial dynamics.
+            </p>
+            <p>
+                LaMP instead factorizes the problem through two complementary experts: a <b>Motion Expert</b> that generates one-step partially denoised 3D scene flow via conditional flow matching, and an <b>Action Expert</b> whose predictions are aligned with the motion representation through gated cross-attention. Crucially, the Motion Expert's hidden state conditions the Action Expert without requiring full multi-step reconstruction, providing rich geometric guidance at negligible additional cost.
+            </p>
+            <p>
+                Evaluated on LIBERO, LIBERO-Plus, SimplerEnv-WidowX, and real-world experiments, LaMP achieves the highest average success rate under the same training budget, and on LIBERO-Plus OOD perturbations, <b>outperforms the strongest baseline by an average margin of 9.7%</b>.
+            </p>
+        </div>
+    </section>
+
+    <!-- Method Section -->
+    <section class="method">
+        <div class="container">
+            <h2>Method</h2>
+
+            <!-- Architecture Overview -->
+            <div class="method-figure">
+                <img src="images/pipeline.png" alt="Pipeline Architecture" class="method-img">
+                <p class="caption">
+                    <b>Overview of the LaMP architecture.</b> LaMP consists of two complementary experts: a Motion Expert that generates 3D scene flow predictions using a CogVideoX-style 3D Transformer, and an Action Expert that receives motion-guided VLM features through gated cross-attention to generate continuous action sequences.
+                </p>
+            </div>
+
+            <!-- Key Components -->
+            <div class="components">
+                <div class="component-card">
+                    <h3><i class="fa-solid fa-arrows-spin"></i> Motion Expert</h3>
+                    <p>
+                        <b>Why 3D scene flow?</b> It provides dense geometric foresight for contact-rich manipulation. The Motion Expert uses a <b>CogVideoX-style 3D Transformer</b> to track <b>K=400 keypoints</b> across <b>T=32 timesteps</b>, trained via conditional flow matching with <b>one-step partial denoising</b> for efficient inference.
+                    </p>
+                </div>
+
+                <div class="component-card">
+                    <h3><i class="fa-solid fa-link"></i> Gated Motion Guidance</h3>
+                    <p>
+                        <b>How to fuse motion without disrupting VLM semantics?</b> A <b>single-layer gated cross-attention</b> with a learnable scalar gate <b>initialized at zero</b> (constrained to 0-1 by sigmoid) enables <b>stable optimization</b>—motion guidance gradually increases only when geometrically beneficial.
+                    </p>
+                </div>
+
+                <div class="component-card">
+                    <h3><i class="fa-solid fa-robot"></i> Action Expert</h3>
+                    <p>
+                        <b>How to transfer to new robots?</b> The Action Expert generates <b>continuous action sequences</b> from motion-guided VLM features. A <b>two-stage training</b> strategy enables <b>embodiment-agnostic transfer</b>—the motion prior transfers to unseen robots with only 10 warm-up demos.
+                    </p>
+                </div>
+
+                <div class="component-card">
+                    <h3><i class="fa-solid fa-chart-line"></i> Performance</h3>
+                    <p>
+                        LaMP achieves <b>98.3% SOTA</b> on LIBERO benchmark, <b>96.7%</b> on challenging long-horizon tasks, and <b>79.2%</b> on SimplerEnv-WidowX (22.1% higher than second best). On LIBERO-Plus OOD perturbations, it outperforms the strongest baseline by <b>+9.7%</b>.
+                    </p>
+                </div>
+            </div>
+
+            <!-- Inference Pipeline -->
+            <div class="inference-info">
+                <h3>Inference Pipeline</h3>
+                <p>
+                    During inference, LaMP performs the following steps: (1) The Vision-Language Model encodes the observation and language instruction; (2) The Motion Expert generates one-step partially denoised 3D scene flow, extracting the hidden motion representation; (3) The Gated Motion Guidance module fuses the motion features with VLM features; (4) The Action Expert generates the final action sequence through flow matching. Crucially, full multi-step reconstruction is not required—only the hidden state provides geometric guidance.
+                </p>
+            </div>
+        </div>
+    </section>
+
+    <!-- Results Section -->
+    <section class="results">
+        <div class="container">
+            <h2>Experiments</h2>
+
+            <!-- Table 1: Combined LIBERO + SimplerEnv-WidowX -->
+            <h3>Table 1: Simulation Benchmark Results</h3>
+            <p class="table-subtitle">Results on LIBERO and SimplerEnv-WidowX benchmarks. Best results in <b>bold</b>, second best <u>underlined</u>.</p>
+            <div class="table-wrapper">
+                <table class="results-table">
+                    <thead>
+                        <tr class="two-level-header">
+                            <th rowspan="2">Method</th>
+                            <th colspan="5">LIBERO</th>
+                            <th colspan="5">SimplerEnv-WidowX</th>
+                        </tr>
+                        <tr class="sub-header">
+                            <th>Spatial</th>
+                            <th>Object</th>
+                            <th>Goal</th>
+                            <th>Long</th>
+                            <th>Avg</th>
+                            <th>Stack Block</th>
+                            <th>Put Carrot</th>
+                            <th>Put Spoon</th>
+                            <th>Put Eggplant</th>
+                            <th>Avg</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <!-- General VLA -->
+                        <tr class="category-header">
+                            <td colspan="11">General VLA</td>
+                        </tr>
+                        <tr>
+                            <td>OpenVLA</td>
+                            <td>84.7</td>
+                            <td>88.4</td>
+                            <td>79.2</td>
+                            <td>53.7</td>
+                            <td>76.5</td>
+                            <td>0.0</td>
+                            <td>0.0</td>
+                            <td>4.2</td>
+                            <td>12.5</td>
+                            <td>4.2</td>
+                        </tr>
+                        <tr>
+                            <td>OpenVLA-OFT</td>
+                            <td>97.6</td>
+                            <td>98.4</td>
+                            <td><u>97.9</u></td>
+                            <td><u>94.5</u></td>
+                            <td><u>97.1</u></td>
+                            <td class="unavailable">–</td>
+                            <td class="unavailable">–</td>
+                            <td class="unavailable">–</td>
+                            <td class="unavailable">–</td>
+                            <td class="unavailable">–</td>
+                        </tr>
+                        <tr>
+                            <td>π<sub>0</sub></td>
+                            <td>96.8</td>
+                            <td>98.8</td>
+                            <td>95.8</td>
+                            <td>85.2</td>
+                            <td>94.2</td>
+                            <td>16.7</td>
+                            <td>0.0</td>
+                            <td>29.1</td>
+                            <td>62.5</td>
+                            <td>40.1</td>
+                        </tr>
+                        <tr>
+                            <td>π<sub>0.5</sub></td>
+                            <td><u>98.8</u></td>
+                            <td>98.2</td>
+                            <td><b>98.0</b></td>
+                            <td>92.4</td>
+                            <td>96.9</td>
+                            <td>44.7</td>
+                            <td>64.7</td>
+                            <td>49.3</td>
+                            <td>69.7</td>
+                            <td>57.1</td>
+                        </tr>
+                        <tr>
+                            <td>GR00T N1</td>
+                            <td>94.4</td>
+                            <td>97.6</td>
+                            <td>93.0</td>
+                            <td>90.6</td>
+                            <td>93.9</td>
+                            <td>16.7</td>
+                            <td>45.8</td>
+                            <td>62.5</td>
+                            <td>20.8</td>
+                            <td>49.5</td>
+                        </tr>
+                        <!-- Latent-Action VLA -->
+                        <tr class="category-header">
+                            <td colspan="11">Latent-Action VLA</td>
+                        </tr>
+                        <tr>
+                            <td>UniVLA</td>
+                            <td>96.5</td>
+                            <td>96.8</td>
+                            <td>95.6</td>
+                            <td>92.0</td>
+                            <td>95.2</td>
+                            <td>29.2</td>
+                            <td>62.5</td>
+                            <td><b>83.3</b></td>
+                            <td><b>100.0</b></td>
+                            <td>68.7</td>
+                        </tr>
+                        <tr>
+                            <td>villa-X</td>
+                            <td>97.5</td>
+                            <td>97.0</td>
+                            <td>91.5</td>
+                            <td>74.5</td>
+                            <td>90.1</td>
+                            <td>61.3</td>
+                            <td>46.3</td>
+                            <td>77.9</td>
+                            <td>64.6</td>
+                            <td>62.5</td>
+                        </tr>
+                        <!-- Video-Based VLA -->
+                        <tr class="category-header">
+                            <td colspan="11">Video-Based VLA</td>
+                        </tr>
+                        <tr>
+                            <td>mimic-video</td>
+                            <td>94.2</td>
+                            <td>96.8</td>
+                            <td>90.6</td>
+                            <td class="unavailable">–</td>
+                            <td>93.9</td>
+                            <td>29.2</td>
+                            <td>54.2</td>
+                            <td>41.7</td>
+                            <td><b>100.0</b></td>
+                            <td>56.3</td>
+                        </tr>
+                        <tr>
+                            <td>WorldVLA</td>
+                            <td>87.6</td>
+                            <td>96.2</td>
+                            <td>83.4</td>
+                            <td>60.0</td>
+                            <td>81.8</td>
+                            <td class="unavailable">–</td>
+                            <td class="unavailable">–</td>
+                            <td class="unavailable">–</td>
+                            <td class="unavailable">–</td>
+                            <td class="unavailable">–</td>
+                        </tr>
+                        <tr>
+                            <td>F<sub>1</sub></td>
+                            <td>98.2</td>
+                            <td>97.8</td>
+                            <td>95.4</td>
+                            <td>91.3</td>
+                            <td>95.7</td>
+                            <td>50.0</td>
+                            <td><b>70.8</b></td>
+                            <td>50.0</td>
+                            <td>66.7</td>
+                            <td>72.9</td>
+                        </tr>
+                        <!-- 2D Flow/Trace-Guided VLA -->
+                        <tr class="category-header">
+                            <td colspan="11">2D Flow/Trace-Guided VLA</td>
+                        </tr>
+                        <tr>
+                            <td>FlowVLA</td>
+                            <td>93.2</td>
+                            <td>95.0</td>
+                            <td>91.6</td>
+                            <td>72.6</td>
+                            <td>88.1</td>
+                            <td><u>62.5</u></td>
+                            <td>62.5</td>
+                            <td>70.8</td>
+                            <td><b>100.0</b></td>
+                            <td><u>74.0</u></td>
+                        </tr>
+                        <tr>
+                            <td>TraceVLA</td>
+                            <td>84.6</td>
+                            <td>85.2</td>
+                            <td>75.1</td>
+                            <td>54.1</td>
+                            <td>75.8</td>
+                            <td>16.6</td>
+                            <td>16.6</td>
+                            <td>12.5</td>
+                            <td>65.0</td>
+                            <td>27.7</td>
+                        </tr>
+                        <!-- Separator -->
+                        <tr class="separator-row">
+                            <td colspan="11"></td>
+                        </tr>
+                        <!-- LaMP -->
+                        <tr class="average-row highlight-row">
+                            <td><b>LaMP</b></td>
+                            <td><b>99.4</b></td>
+                            <td><b>99.8</b></td>
+                            <td>97.4</td>
+                            <td><b>96.7</b></td>
+                            <td><b>98.3</b></td>
+                            <td><b>75.0</b></td>
+                            <td><u>66.7</u></td>
+                            <td><u>79.1</u></td>
+                            <td><u>95.8</u></td>
+                            <td><b>79.2</b></td>
+                        </tr>
+                        <tr>
+                            <td>w/o motion</td>
+                            <td>95.8</td>
+                            <td><u>98.9</u></td>
+                            <td>96.6</td>
+                            <td>78.2</td>
+                            <td>92.4</td>
+                            <td>25.0</td>
+                            <td>45.8</td>
+                            <td>66.7</td>
+                            <td>87.5</td>
+                            <td>56.3</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+
+            <!-- Table 2: LIBERO-Plus OOD Evaluation -->
+            <h3>Table 2: LIBERO-Plus Zero-Shot OOD Evaluation</h3>
+            <p class="table-subtitle">All models are trained on LIBERO and evaluated zero-shot on seven perturbation dimensions without additional training data.</p>
+            <div class="table-wrapper">
+                <table class="results-table">
+                    <thead>
+                        <tr>
+                            <th>Method</th>
+                            <th>Camera</th>
+                            <th>Robot</th>
+                            <th>Language</th>
+                            <th>Light</th>
+                            <th>Background</th>
+                            <th>Noise</th>
+                            <th>Layout</th>
+                            <th>Avg</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td>UniVLA</td>
+                            <td>1.8</td>
+                            <td>46.2</td>
+                            <td>69.6</td>
+                            <td>69.0</td>
+                            <td>81.0</td>
+                            <td>21.2</td>
+                            <td>31.9</td>
+                            <td>42.9</td>
+                        </tr>
+                        <tr>
+                            <td>OpenVLA</td>
+                            <td>0.8</td>
+                            <td>3.5</td>
+                            <td>23.0</td>
+                            <td>8.1</td>
+                            <td>34.8</td>
+                            <td>15.2</td>
+                            <td>28.5</td>
+                            <td>15.6</td>
+                        </tr>
+                        <tr>
+                            <td>OpenVLA-OFT</td>
+                            <td>56.4</td>
+                            <td>31.9</td>
+                            <td>79.5</td>
+                            <td><u>88.7</u></td>
+                            <td>93.3</td>
+                            <td>75.8</td>
+                            <td><b>74.2</b></td>
+                            <td>69.6</td>
+                        </tr>
+                        <tr>
+                            <td>π<sub>0</sub></td>
+                            <td>13.8</td>
+                            <td>6.0</td>
+                            <td>58.8</td>
+                            <td>85.0</td>
+                            <td>81.4</td>
+                            <td><b>79.0</b></td>
+                            <td>68.9</td>
+                            <td>53.6</td>
+                        </tr>
+                        <tr>
+                            <td>π<sub>0</sub>-Fast</td>
+                            <td><b>65.1</b></td>
+                            <td>21.6</td>
+                            <td>61.0</td>
+                            <td>73.2</td>
+                            <td>73.2</td>
+                            <td>74.4</td>
+                            <td>68.8</td>
+                            <td>61.6</td>
+                        </tr>
+                        <tr>
+                            <td>WorldVLA</td>
+                            <td>0.1</td>
+                            <td>27.9</td>
+                            <td>41.6</td>
+                            <td>43.7</td>
+                            <td>17.1</td>
+                            <td>10.9</td>
+                            <td>38.0</td>
+                            <td>25.0</td>
+                        </tr>
+                        <!-- Separator -->
+                        <tr class="separator-row">
+                            <td colspan="9"></td>
+                        </tr>
+                        <!-- LaMP -->
+                        <tr class="average-row highlight-row">
+                            <td><b>LaMP</b></td>
+                            <td><u>64.5</u></td>
+                            <td><b>69.6</b></td>
+                            <td><b>88.2</b></td>
+                            <td><b>95.3</b></td>
+                            <td><b>97.4</b></td>
+                            <td><u>76.9</u></td>
+                            <td><u>73.8</u></td>
+                            <td><b>79.3</b></td>
+                        </tr>
+                        <tr>
+                            <td>w/o motion</td>
+                            <td>46.7</td>
+                            <td><u>56.0</u></td>
+                            <td><u>82.5</u></td>
+                            <td><b>95.3</b></td>
+                            <td><u>95.4</u></td>
+                            <td>69.3</td>
+                            <td>71.0</td>
+                            <td><u>71.6</u></td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+
+            <!-- Real-World Experiments (moved before Key Achievements) -->
+            <h3>Real-World Experiments</h3>
+            <div class="real-world-info">
+                <div class="platform-info">
+                    <h4><i class="fa-solid fa-robot"></i> Experimental Platform</h4>
+                    <ul>
+                        <li><b>Robot:</b> Flexiv Rizon 4</li>
+                        <li><b>Gripper:</b> Robotiq 2F-85</li>
+                        <li><b>Camera:</b> Intel RealSense D415</li>
+                    </ul>
+                </div>
+                <div class="tasks-info">
+                    <h4><i class="fa-solid fa-list-check"></i> Evaluation Tasks</h4>
+                    <ul>
+                        <li>Pick-and-Place (Stack Cup)</li>
+                        <li>Fold Towel</li>
+                        <li>Making Bread</li>
+                    </ul>
+                </div>
+                <div class="ood-info">
+                    <h4><i class="fa-solid fa-shuffle"></i> OOD Conditions</h4>
+                    <ul>
+                        <li>Novel Layout</li>
+                        <li>Novel Object</li>
+                        <li>Novel Background</li>
+                    </ul>
+                </div>
+            </div>
+
+            <!-- Platform Image -->
+            <div class="platform-figure">
+                <img src="images/platform.png" alt="Real-World Experimental Platform" class="platform-img">
+                <p class="caption">
+                    <b>Real-world experimental platform.</b> We use a Flexiv Rizon 4 robot arm with a Robotiq 2F-85 gripper and an Intel RealSense D415 camera for real-world evaluation.
+                </p>
+            </div>
+
+            <!-- Real-World Bar Chart -->
+            <div class="bar-chart-container-v2">
+                <!-- 图例 -->
+                <div class="chart-legend-v2">
+                    <div class="legend-item-v2">
+                        <span class="legend-color-v2" style="background-color: #7EA6D9;"></span>
+                        <span>π<sub>0</sub></span>
+                    </div>
+                    <div class="legend-item-v2">
+                        <span class="legend-color-v2" style="background-color: #F8F2A4;"></span>
+                        <span>3D FDP</span>
+                    </div>
+                    <div class="legend-item-v2">
+                        <span class="legend-color-v2" style="background-color: #D4E6BC;"></span>
+                        <span>LaMP</span>
+                    </div>
+                </div>
+                
+                <div class="bar-chart-title-v2">Real-world Benchmark</div>
+                
+                <div class="bar-chart-v2">
+                    <div class="y-axis-container">
+                        <div class="y-axis-title">Avg Task Progress (%)</div>
+                        <div class="y-axis-labels">
+                            <div>100</div>
+                            <div>80</div>
+                            <div>60</div>
+                            <div>40</div>
+                            <div>20</div>
+                            <div>0</div>
+                        </div>
+                    </div>
+                    <div class="chart-area">
+                        <div class="grid-lines">
+                            <div></div><div></div><div></div><div></div><div></div><div></div>
+                        </div>
+                        <div class="bars-container">
+                            <!-- Pick and Place -->
+                            <div class="bar-group-v2">
+                                <div class="bar-wrapper-v2">
+                                    <div class="bar-value-top">70</div>
+                                    <div class="bar-v2" style="height: 171.5px; background-color: #7EA6D9;"></div>
+                                </div>
+                                <div class="bar-wrapper-v2">
+                                    <div class="bar-value-top">53</div>
+                                    <div class="bar-v2" style="height: 129.85px; background-color: #F8F2A4;"></div>
+                                </div>
+                                <div class="bar-wrapper-v2">
+                                    <div class="bar-value-top">80</div>
+                                    <div class="bar-v2" style="height: 196px; background-color: #D4E6BC;"></div>
+                                </div>
+                                <div class="bar-label-v2">Pick and Place</div>
+                            </div>
+                            <!-- Deformable -->
+                            <div class="bar-group-v2">
+                                <div class="bar-wrapper-v2">
+                                    <div class="bar-value-top">40</div>
+                                    <div class="bar-v2" style="height: 98px; background-color: #7EA6D9;"></div>
+                                </div>
+                                <div class="bar-wrapper-v2">
+                                    <div class="bar-value-top">40</div>
+                                    <div class="bar-v2" style="height: 98px; background-color: #F8F2A4;"></div>
+                                </div>
+                                <div class="bar-wrapper-v2">
+                                    <div class="bar-value-top">50</div>
+                                    <div class="bar-v2" style="height: 122.5px; background-color: #D4E6BC;"></div>
+                                </div>
+                                <div class="bar-label-v2">Deformable</div>
+                            </div>
+                            <!-- Long-Horizon -->
+                            <div class="bar-group-v2">
+                                <div class="bar-wrapper-v2">
+                                    <div class="bar-value-top">70</div>
+                                    <div class="bar-v2" style="height: 171.5px; background-color: #7EA6D9;"></div>
+                                </div>
+                                <div class="bar-wrapper-v2">
+                                    <div class="bar-value-top">60</div>
+                                    <div class="bar-v2" style="height: 147px; background-color: #F8F2A4;"></div>
+                                </div>
+                                <div class="bar-wrapper-v2">
+                                    <div class="bar-value-top">80</div>
+                                    <div class="bar-v2" style="height: 196px; background-color: #D4E6BC;"></div>
+                                </div>
+                                <div class="bar-label-v2">Long-Horizon</div>
+                            </div>
+                            <!-- Out of Domain -->
+                            <div class="bar-group-v2">
+                                <div class="bar-wrapper-v2">
+                                    <div class="bar-value-top">52.5</div>
+                                    <div class="bar-v2" style="height: 128.625px; background-color: #7EA6D9;"></div>
+                                </div>
+                                <div class="bar-wrapper-v2">
+                                    <div class="bar-value-top">26.8</div>
+                                    <div class="bar-v2" style="height: 65.66px; background-color: #F8F2A4;"></div>
+                                </div>
+                                <div class="bar-wrapper-v2">
+                                    <div class="bar-value-top">62.5</div>
+                                    <div class="bar-v2" style="height: 153.125px; background-color: #D4E6BC;"></div>
+                                </div>
+                                <div class="bar-label-v2">Out of Domain</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <p class="method-note">
+                LaMP outperforms π<sub>0</sub> and 3D FDP across all tasks, with the largest gains on <b>Deformable manipulation</b> (50% vs 40% for both baselines) and <b>OOD conditions</b> (62.5% vs 26.8% for 3D FDP). Notably, 3D FDP collapses under distribution shift (−26.2 points), while LaMP degrades gracefully (−17.5 points), confirming that <b>camera-frame geometric reasoning is more resilient to visual shifts</b> than pixel-level representations.
+            </p>
+
+            <!-- Key Achievements (now after Real-World Experiments) -->
+            <h3>Key Achievements</h3>
+            <div class="achievements">
+                <div class="achievement-card">
+                    <div class="achievement-number">98.3%</div>
+                    <div class="achievement-label">LIBERO</div>
+                    <div class="achievement-note">State-of-the-Art</div>
+                </div>
+                <div class="achievement-card">
+                    <div class="achievement-number">+9.7%</div>
+                    <div class="achievement-label">OOD Robustness Gain</div>
+                    <div class="achievement-note">LIBERO-Plus Zero-Shot</div>
+                </div>
+                <div class="achievement-card">
+                    <div class="achievement-number">79.2%</div>
+                    <div class="achievement-label">SimplerEnv-WidowX</div>
+                    <div class="achievement-note">+22.1% vs Second Best</div>
+                </div>
+                <div class="achievement-card">
+                    <div class="achievement-number">62.5%</div>
+                    <div class="achievement-label">Real-World OOD</div>
+                    <div class="achievement-note">+35.7% vs 3D FDP and +10% vs π<sub>0</sub></div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Citation Section -->
+    <section class="citation">
+        <div class="container">
+            <h2>Citation</h2>
+            <p>If you find our work useful, please consider citing:</p>
+            <div class="bibtex">
+                <button class="copy-btn" onclick="copyBibtex()">
+                    <i class="fa-regular fa-copy"></i> Copy
+                </button>
+<pre id="bibtex-content">@inproceedings{wang2026lamp,
+  title={LaMP: Learning Vision-Language-Action Policy with 3D Scene Flow as Latent Motion Prior},
+  author={Wang, Xinkai and Wang, Chenyi and Xu, Yifu and Ye, Mingzhe and Zhang, Fucheng and Tian, Jialin and Zhan, Xinyu and Zhu, Lifeng and Lu, Cewu and Yang, Lixin},
+  journal={arXiv preprint},
+  year={2026}
+}</pre>
+            </div>
+        </div>
+    </section>
+
+    <!-- Footer -->
+    <footer class="footer">
+        <div class="container">
+            <p>
+                Website template inspired by <a href="https://dazazh.github.io/r3dp-project-page/" target="_blank">R3DP</a>.
+            </p>
+        </div>
+    </footer>
+
+    <script src="js/main.js"></script>
+</body>
+</html>
