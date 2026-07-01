@@ -14,6 +14,9 @@
         <div class="container">
             <h1 class="title">LaMP: Learning Vision-Language-Action Policy with 3D Scene Flow as Latent Motion Prior</h1>
 
+            <!-- Venue -->
+            <div class="venue">ECCV 2026</div>
+
             <!-- Authors -->
             <div class="authors">
                 <span class="author">Xinkai Wang<sup>1,3</sup></span>,
@@ -41,13 +44,13 @@
 
             <!-- Resource Links -->
             <div class="links">
-                <a href="#" class="btn" target="_blank">
+                <a href="https://arxiv.org/pdf/2603.25399" class="btn" target="_blank" rel="noopener">
                     <i class="fa-solid fa-file-pdf"></i> Paper
                 </a>
-                <a href="#" class="btn" target="_blank">
-                    <i class="fa-brands fa-github"></i> Code
-                </a>
-                <a href="#" class="btn" target="_blank">
+                <span class="btn btn-disabled" title="Coming soon">
+                    <i class="fa-brands fa-github"></i> Code (Coming Soon)
+                </span>
+                <a href="#demo" class="btn">
                     <i class="fa-brands fa-youtube"></i> Video
                 </a>
             </div>
@@ -57,7 +60,7 @@
     <!-- Teaser Figure -->
     <section class="teaser">
         <div class="container">
-            <img src="images/teaser.png" alt="Teaser Figure" class="teaser-img">
+            <img src="images/teaser.png?v=2" alt="Teaser Figure" class="teaser-img">
             <p class="caption">
                 <b>LaMP achieves best performance by embedding 3D scene flow as a latent motion prior.</b> Unlike 2D-centric VLAs that struggle with spatial reasoning, LaMP's dual-expert architecture achieves <b>98.3%</b> on LIBERO, <b>+9.7%</b> improvement on OOD perturbations, and <b>79.2%</b> on SimplerEnv-WidowX—bridging the sim-to-real gap through explicit geometric foresight.
             </p>
@@ -80,6 +83,22 @@
         </div>
     </section>
 
+    <!-- Demo Video Section -->
+    <section class="video-section" id="demo">
+        <div class="container">
+            <h2>Demo Video</h2>
+            <!-- TODO: replace this placeholder with the demo video.
+                 Self-hosted (recommended): put the file at videos/demo.mp4 and use
+                 <div class="video-wrapper"><video src="videos/demo.mp4" poster="images/teaser.png?v=2" controls autoplay muted loop playsinline></video></div>
+                 Or embed YouTube/Bilibili:
+                 <div class="video-wrapper"><iframe src="https://www.youtube.com/embed/VIDEO_ID" allowfullscreen></iframe></div> -->
+            <div class="video-placeholder">
+                <i class="fa-solid fa-film"></i>
+                <p>Demo video coming soon</p>
+            </div>
+        </div>
+    </section>
+
     <!-- Method Section -->
     <section class="method">
         <div class="container">
@@ -87,7 +106,7 @@
 
             <!-- Architecture Overview -->
             <div class="method-figure">
-                <img src="images/pipeline.png" alt="Pipeline Architecture" class="method-img">
+                <img src="images/pipeline.png?v=2" alt="Pipeline Architecture" class="method-img">
                 <p class="caption">
                     <b>Overview of the LaMP architecture.</b> LaMP consists of two complementary experts: a Motion Expert that generates 3D scene flow predictions using a CogVideoX-style 3D Transformer, and an Action Expert that receives motion-guided VLM features through gated cross-attention to generate continuous action sequences.
                 </p>
@@ -112,7 +131,7 @@
                 <div class="component-card">
                     <h3><i class="fa-solid fa-robot"></i> Action Expert</h3>
                     <p>
-                        <b>How to transfer to new robots?</b> The Action Expert generates <b>continuous action sequences</b> from motion-guided VLM features. A <b>two-stage training</b> strategy enables <b>embodiment-agnostic transfer</b>—the motion prior transfers to unseen robots with only 10 warm-up demos.
+                        <b>How to transfer to new robots?</b> The Action Expert generates <b>continuous action sequences</b> from motion-guided VLM features. A <b>two-stage training</b> strategy enables <b>embodiment-agnostic transfer</b>—the motion prior transfers to unseen robots with only 10 demonstrations per task.
                     </p>
                 </div>
 
@@ -548,7 +567,7 @@
 
             <!-- Platform Image -->
             <div class="platform-figure">
-                <img src="images/platform.png" alt="Real-World Experiment Platform and Task Overview" class="platform-img">
+                <img src="images/platform.png?v=2" alt="Real-World Experiment Platform and Task Overview" class="platform-img">
                 <p class="caption">
                     <b>Real-world experiment platform and task overview.</b> <b>(a)</b> In-domain tasks: Pick-and-Place, Deformable manipulation, and Long-horizon tasks. <b>(b)</b> Hardware setup (Flexiv Rizon 4 arm with Robotiq 2F-85 gripper and Intel RealSense D415 camera) and OOD test conditions (unseen layout, object, and background). <b>(c)</b> Motion foresight visualizations—predicted 3D trajectories overlaid on the current observation, with color from blue to red indicating temporal progression.
                 </p>
@@ -703,7 +722,7 @@
 <pre id="bibtex-content">@inproceedings{wang2026lamp,
   title={LaMP: Learning Vision-Language-Action Policy with 3D Scene Flow as Latent Motion Prior},
   author={Wang, Xinkai and Wang, Chenyi and Xu, Yifu and Ye, Mingzhe and Zhang, Fucheng and Tian, Jialin and Zhan, Xinyu and Zhu, Lifeng and Lu, Cewu and Yang, Lixin},
-  journal={arXiv preprint},
+  booktitle={European Conference on Computer Vision (ECCV)},
   year={2026}
 }</pre>
             </div>

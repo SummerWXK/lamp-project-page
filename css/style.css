@@ -135,6 +135,60 @@ img {
     font-size: 1.1rem;
 }
 
+.btn-disabled {
+    background: var(--text-light);
+    opacity: 0.6;
+    cursor: default;
+}
+
+.btn-disabled:hover {
+    background: var(--text-light);
+    transform: none;
+    text-decoration: none;
+}
+
+/* ===== Demo Video Section ===== */
+.video-wrapper {
+    position: relative;
+    width: 100%;
+    margin: 10px 0;
+    border-radius: 10px;
+    overflow: hidden;
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+}
+
+.video-wrapper video,
+.video-wrapper iframe {
+    display: block;
+    width: 100%;
+    aspect-ratio: 16 / 9;
+    border: 0;
+}
+
+.video-placeholder {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 12px;
+    aspect-ratio: 16 / 9;
+    background: var(--bg-color);
+    border: 2px dashed var(--border-color);
+    border-radius: 10px;
+    color: var(--text-light);
+    text-align: center;
+}
+
+.video-placeholder i {
+    font-size: 3rem;
+    color: #9ca3af;
+}
+
+.video-placeholder p {
+    font-size: 1rem;
+    font-weight: 500;
+}
+
 /* ===== Teaser Section ===== */
 .teaser {
     padding: 40px 0;
