@@ -2,9 +2,9 @@
 
 Project page for **LaMP: Learning Vision-Language-Action Policy with 3D Scene Flow as Latent Motion Prior** (ECCV 2026).
 
-🌐 **Live page:** https://summerwxk.github.io/lamp-project-page/
-📄 **Paper:** https://arxiv.org/pdf/2603.25399
-💻 **Code:** https://github.com/SummerWXK/LaMP
+- 🌐 **Live page:** https://summerwxk.github.io/lamp-project-page/
+- 📄 **Paper:** https://arxiv.org/pdf/2603.25399
+- 💻 **Code:** https://github.com/SummerWXK/LaMP
 
 ## About
 
